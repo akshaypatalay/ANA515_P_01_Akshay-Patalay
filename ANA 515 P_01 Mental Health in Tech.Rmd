@@ -1,0 +1,348 @@
+---
+title: "ANA 515 Assignment 3 Getting and Cleaning Data"
+author: "Akshay Patalay"
+date: "2024-10-13"
+output:
+  html_document:
+    df_print: paged
+---
+
+## File Name : survey_sheet1.csv, survey_sheet2.csv
+## 1. Installing packages and libraries into R
+
+Installing required packages and libraries to finish up with the project in order to use the required functions to perform operations.
+
+```{r library, echo=TRUE}
+library(tidyverse)
+library(knitr)
+library(dplyr)
+library(tools)
+library(stringr)
+library(ggplot2)
+library(rlang)
+```
+
+## 2 Reading the data into R
+
+Used the read.csv function to load the csv file into a data frame. This function to read the csv file has come from the tidyverse package. 
+
+Special options that are available as part of the read.csv function are as follows - 
+
+(1) StringsAsFactors = By default, when building or importing a data frame, the columns that contain characters (i.e., text) are coerced (converted) into the factor data type.
+(2) Check Names = Affects how column names are handled when reading CSV files into R.If set to TRUE, it modifies any non-compliant names to conform to R's variable naming rules, such as replacing spaces with dots and converting the first character to lowercase.
+(3) Header = If TRUE, read.csv() assumes that your file has a header row so first row is the name of each column.
+(4) Separator = The field separator character.
+(5) SkipNul = Skip the NULL values from the data set.
+
+
+```{r read csv, echo=TRUE}
+mental_health_sheet1_csv <- read.csv("C:\\Users\\aksha\\Desktop\\ANA515P_01\\survey_sheet1.csv",stringsAsFactors = F,check.names = F, header = T, sep = ",", skipNul = T)
+mental_health_sheet1_csv <- as.data.frame(mental_health_sheet1_csv)
+
+mental_health_sheet2_csv <- read.csv("C:\\Users\\aksha\\Desktop\\ANA515P_01\\survey_sheet2.csv",stringsAsFactors = F,check.names = F, header = T, sep = ",", skipNul = T)
+mental_health_sheet2_csv <- as.data.frame(mental_health_sheet2_csv)
+
+head(mental_health_sheet1_csv,10)
+head(mental_health_sheet2_csv,10)
+
+str(mental_health_sheet1_csv)
+str(mental_health_sheet2_csv)
+
+mental_health_sheet2_csv$Age <- as.integer(mental_health_sheet2_csv$Age)
+
+```
+## 3 Merging the two data frames into one.
+
+The two files Sheet1 & Sheet2 Survey CSV files are merged together using the merge command.
+Printing the values to see total rows from both files are captured in the data frame.
+
+```{r merge data frames, echo=TRUE}
+merge_mental_health_df <- merge(x=mental_health_sheet1_csv,y=mental_health_sheet2_csv,all=TRUE)
+print(merge_mental_health_df)
+```
+
+##  4.	Subset the data frame to the following columns:
+
+Selecting only few columns for analysis and visualizations.
+
+(1) AGE
+(2) GENDER
+(3) COUNTRY
+(4) STATE
+(5) FAMILY_HISTORY
+(6) TREATMENT
+(7) WORK_INTERFERE
+(8) NO_EMPLOYEES
+(9) REMOTE_WORK
+(10) TECH_COMPANY
+(11) CARE_OPTIONS
+(12) WELLNESS_PROGRAM
+(13) LEAVE
+(14) COWORKERS
+(15) SUPERVISOR
+
+
+```{r subset columns, echo=TRUE}
+myvars <- c("Age", "Gender", "Country", "state","family_history","treatment","work_interfere","no_employees","remote_work","tech_company","care_options","wellness_program","leave","coworkers","supervisor")
+merge_mental_health_df <- merge_mental_health_df[myvars]
+head(merge_mental_health_df,10)
+```
+
+## 5.	Arrange the data in the data frame by STATE
+
+Arranging the data by state in ascending order.
+
+```{r arrange, echo=TRUE}
+merge_mental_health_df <- arrange(merge_mental_health_df,state)
+head(merge_mental_health_df,10) 
+```
+
+## 6.	Limit the data 
+
+Limiting the data to only include :
+
+(1) Population of United States 
+(2) considering age group above 15 years of age.
+
+Limiting the data allows to deal or work with a smaller sub group of data for further analysis and visualization
+
+```{r subset, echo=TRUE}
+merge_mental_health_df <- subset(merge_mental_health_df, Country == 'United States')
+
+filteredelectricvehicles <- merge_mental_health_df %>%
+filter(Age > 15)
+
+print(filteredelectricvehicles)
+```
+
+## 7. Summary Statistics and finding unique values per column
+
+(1) Determining the summary statistics i.e min, 1st Q , 3rd Q, max
+(2) Finding unique values for each column to determine categories for categorical columns
+
+Summary statistics is a part of descriptive statistics that summarizes and provides the gist of information about the sample data. Statisticians commonly try to describe and characterize the observations by finding: a measure of location, or central tendency, such as the arithmetic mean.
+
+Finding unique values for each column determing unique categories associated with every column.
+
+```{r summary statistics and unique values, echo=TRUE}
+summary(filteredelectricvehicles)
+
+unique(filteredelectricvehicles$Age)
+unique(filteredelectricvehicles$Gender)
+unique(filteredelectricvehicles$Country)
+unique(filteredelectricvehicles$state)
+unique(filteredelectricvehicles$treatment)
+unique(filteredelectricvehicles$family_history)
+unique(filteredelectricvehicles$work_interfere)
+unique(filteredelectricvehicles$no_employees)
+unique(filteredelectricvehicles$remote_work)
+unique(filteredelectricvehicles$tech_company)
+unique(filteredelectricvehicles$benefits)
+unique(filteredelectricvehicles$care_options)
+unique(filteredelectricvehicles$wellness_program)
+unique(filteredelectricvehicles$leave)
+unique(filteredelectricvehicles$coworkers)
+unique(filteredelectricvehicles$supervisor)
+```
+## 8.	Converting all the column names to upper case including spelling 
+
+Convert all the column names to upper case for clarity.
+
+```{r Column Upper Case, echo=TRUE}
+subset_storm_events_csv <- rename_all(filteredelectricvehicles,toupper)
+print(subset_storm_events_csv)
+```
+
+## 9. Formatting the data in the data frames, handling missing values, checking spellings
+
+In the below code we are -
+
+(1) Formatting the data for given columns :
+GENDER, FAMILY_HISTORY, TREATMENT, NO_EMPLOYEES, REMOTE_WORK, TECH_COMPANY, CARE_OPTIONS,        WELLNESS_PROGRAM, LEAVE, COWORKERS, SUPERVISOR
+
+To transform and standardize the value for easy analysis and application of machine learning algorithms.
+
+(2) Handling missing values
+By assigning NA to missing values
+
+Missing or empty values are handled in the case_when command all missing values are assigned a category as NA.
+
+```{r case statements, echo=TRUE}
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          GENDER = case_when
+                              (
+                                GENDER %in% c("M") ~ "M",
+                                GENDER %in% c("Male") ~ "M",
+                                GENDER %in% c("male") ~ "M",
+                                GENDER %in% c("female") ~ "F",
+                                GENDER %in% c("Female") ~ "M",
+                                GENDER %in% c("Male") ~ "M",
+                                GENDER %in% c("Cis Man") ~ "M",
+                                GENDER %in% c("ostensibly male, unsure what that really means") ~ "M",
+                                GENDER %in% c("f") ~ "F",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          FAMILY_HISTORY = case_when
+                              (
+                                FAMILY_HISTORY %in% c("Yes") ~ "Y",
+                                FAMILY_HISTORY %in% c("No") ~ "N",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          TREATMENT = case_when
+                              (
+                                TREATMENT %in% c("Yes") ~ "Y",
+                                TREATMENT %in% c("No") ~ "N",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          NO_EMPLOYEES = case_when
+                              (
+                                NO_EMPLOYEES %in% c("More than 1000") ~ ">1000",
+                                NO_EMPLOYEES %in% c("5-Jan") ~ "5-10",
+                                NO_EMPLOYEES %in% c("25-Jun") ~ "25-100",
+                                NO_EMPLOYEES %in% c("100-500") ~ "100-500",
+                                NO_EMPLOYEES %in% c("26-100") ~ "26-100",
+                                NO_EMPLOYEES %in% c("500-1000") ~ "500-1000",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          REMOTE_WORK = case_when
+                              (
+                                REMOTE_WORK %in% c("Yes") ~ "Y",
+                                REMOTE_WORK %in% c("No") ~ "N",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          TECH_COMPANY = case_when
+                              (
+                                TECH_COMPANY %in% c("Yes") ~ "Y",
+                                TECH_COMPANY %in% c("No") ~ "N",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          CARE_OPTIONS = case_when
+                              (
+                                CARE_OPTIONS %in% c("Yes") ~ "Y",
+                                CARE_OPTIONS %in% c("No") ~ "N",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          WELLNESS_PROGRAM = case_when
+                              (
+                                WELLNESS_PROGRAM %in% c("Yes") ~ "Y",
+                                WELLNESS_PROGRAM %in% c("No") ~ "N",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          LEAVE = case_when
+                              (
+                                LEAVE %in% c("Somewhat easy") ~ "Easy",
+                                LEAVE %in% c("Somewhat difficult") ~ "Difficult",
+                                LEAVE %in% c("Very difficult") ~ "Difficult",
+                                LEAVE %in% c("Very easy") ~ "Easy",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          COWORKERS = case_when
+                              (
+                                COWORKERS %in% c("Some of them") ~ "Y",
+                                COWORKERS %in% c("Yes") ~ "Y",
+                                COWORKERS %in% c("No") ~ "N",
+                                COWORKERS %in% c("1") ~ "Y",
+                                COWORKERS %in% c("2") ~ "Y",
+                                COWORKERS %in% c("3") ~ "Y",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+subset_storm_events_csv <- subset_storm_events_csv %>% mutate(
+                          SUPERVISOR = case_when
+                              (
+                                SUPERVISOR %in% c("Some of them") ~ "Y",
+                                SUPERVISOR %in% c("Yes") ~ "Y",
+                                SUPERVISOR %in% c("No") ~ "N",
+                                TRUE ~ "NA"
+                              ) 
+                       )
+
+print(subset_storm_events_csv)
+```
+
+## 10.	Create the following visuals :
+
+Set of visuals that describe the data and gives a clear understanding of statistics.
+
+1. Below is a Bar Chart displaying Gender Counts.
+
+```{r gender histogram, echo=TRUE}
+ggplot(data = subset_storm_events_csv, aes(x = GENDER, fill = factor(GENDER))) +
+  geom_bar() +
+  theme_minimal() +
+  labs(
+    title = "Bar Chart of Gender Count",
+    ylab = "Count",
+    fill = "Gender"
+  )
+```
+
+2. Below is a Bar Chart displaying Family History Counts.
+
+```{r family history histogram, echo=TRUE}
+ggplot(data = subset_storm_events_csv, aes(x = FAMILY_HISTORY, fill = factor(FAMILY_HISTORY))) +
+  geom_bar() +
+  theme_minimal() +
+  labs(
+    title = "Bar Chart of Family History Count",
+    ylab = "Count",
+    fill = "Family History"
+  )
+```
+
+3. Below is a Histogram displaying Care Options counts.
+
+```{r Care Options Histogram, echo=TRUE}
+ggplot(data = subset_storm_events_csv, aes(x = CARE_OPTIONS, fill = factor(CARE_OPTIONS))) +
+  geom_bar() +
+  theme_minimal() +
+  labs(
+    title = "Histogram representing breakdown of Care Options",
+    ylab = "Count",
+    fill = "Care Options"
+  )
+```
+5. Below is a Grouped Bar Plot displaying Work Interfere by Gender.
+
+```{r Work Interfere, echo=TRUE}
+ggplot(subset_storm_events_csv) +
+  geom_bar(aes(x = WORK_INTERFERE, fill = GENDER), position = "dodge") +
+  xlab("work_interfere") + ylab("Count")
+```
+6. Below is a Stacked Bar Plot displaying Work Wellness Programs by Gender.
+
+```{r Wellness Program, echo=TRUE}
+ggplot(subset_storm_events_csv) +
+  geom_bar(aes(x = WELLNESS_PROGRAM, fill = GENDER)) +
+  xlab("WELLNESS_PROGRAM") + ylab("Count")
+```
+
